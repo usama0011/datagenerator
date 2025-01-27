@@ -666,7 +666,28 @@ const App = () => {
           fontWeight: "bold",
         },
       }),
+      render: (value) => {
+        // Define colors for each impression device
+        const impressionDeviceColors = {
+          Feed: "#1E90FF", //
+          "Facebook Stories": "#FF69B4", // Pink
+          Marketplace: "#32CD32", // Green
+          Search: "#FFD700", // Yellow
+          Default: "#808080", // Gray
+        };
+
+        // Get the color for the impression device, default to gray if not specified
+        const color =
+          impressionDeviceColors[value] || impressionDeviceColors.Default;
+
+        return (
+          <span style={{ color: color, fontWeight: "bold" }}>
+            {value || "N/A"}
+          </span>
+        );
+      },
     },
+
     {
       title: "Link Clicks",
       dataIndex: "linkClicks",
