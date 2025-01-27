@@ -13,6 +13,7 @@ import {
   Input,
   Row,
   Col,
+  InputNumber,
 } from "antd";
 import dayjs from "dayjs";
 import "./App.css";
@@ -31,10 +32,17 @@ const App = () => {
     return (linkClicks * costPerResult).toFixed(2);
   };
 
-  const fetchCampaignData = async ({ from, to, staticData }) => {
+  const fetchCampaignData = async ({
+    from,
+    to,
+    staticData,
+    timezoneId,
+    offerId,
+    affiliateId,
+  }) => {
     setLoading(true);
     const payload = {
-      timezone_id: 32,
+      timezone_id: timezoneId,
       currency_id: "USD",
       from: from.format("YYYY-MM-DD"),
       to: to.format("YYYY-MM-DD"),
@@ -46,8 +54,8 @@ const App = () => {
       usm_columns: [],
       query: {
         filters: [
-          { resource_type: "offer", filter_id_value: "66" },
-          { resource_type: "affiliate", filter_id_value: "20" },
+          { resource_type: "offer", filter_id_value: offerId },
+          { resource_type: "affiliate", filter_id_value: affiliateId },
         ],
         exclusions: [],
         metric_filters: [],
@@ -153,10 +161,17 @@ const App = () => {
     }
   };
   //newtable
-  const fetchReportingData = async ({ from, to, staticData }) => {
+  const fetchReportingData = async ({
+    from,
+    to,
+    staticData,
+    timezoneId,
+    offerId,
+    affiliateId,
+  }) => {
     setLoading(true);
     const payload = {
-      timezone_id: 32,
+      timezone_id: timezoneId,
       currency_id: "USD",
       from: from.format("YYYY-MM-DD"),
       to: to.format("YYYY-MM-DD"),
@@ -169,8 +184,8 @@ const App = () => {
       usm_columns: [],
       query: {
         filters: [
-          { resource_type: "offer", filter_id_value: "66" },
-          { resource_type: "affiliate", filter_id_value: "20" },
+          { resource_type: "offer", filter_id_value: offerId },
+          { resource_type: "affiliate", filter_id_value: affiliateId },
         ],
         exclusions: [],
         metric_filters: [],
@@ -866,15 +881,53 @@ const App = () => {
   const reportingColumns = [...columns]; // Includes all fields
 
   const onFinish = (values) => {
-    const { rangePicker, ...restFields } = values;
+    const { rangePicker, timezoneId, offerId, affiliateId, ...restFields } =
+      values;
+
+    if (!rangePicker || rangePicker.length !== 2) {
+      message.error("Please select a valid date range!");
+      return;
+    }
+
     const [from, to] = rangePicker;
+
+    // Convert timezoneId to a number
+    const timezoneIdNumber = Number(timezoneId);
+    const offerIdNumber = Number(offerId);
+    const affiliateIdNumber = Number(affiliateId);
+
+    // Validate that they are numbers
+    if (
+      isNaN(timezoneIdNumber) ||
+      isNaN(offerIdNumber) ||
+      isNaN(affiliateIdNumber)
+    ) {
+      message.error(
+        "Invalid inputs. Please enter valid numbers for all fields."
+      );
+      return;
+    }
 
     const staticData = { ...restFields };
 
-    fetchCampaignData({ from, to, staticData });
-    fetchReportingData({ from, to, staticData });
-  };
+    fetchCampaignData({
+      from,
+      to,
+      timezoneId: timezoneIdNumber,
+      offerId: offerIdNumber,
+      affiliateId: affiliateIdNumber,
+      staticData,
+    });
 
+    fetchReportingData({
+      from,
+      to,
+      timezoneId: timezoneIdNumber,
+      offerId: offerIdNumber,
+      affiliateId: affiliateIdNumber,
+      staticData,
+    });
+  };
   const downloadCampaignCSV = () => {
     if (!campaignData || campaignData.length === 0) {
       message.warning("No campaign data available to download!");
@@ -931,6 +984,40 @@ const App = () => {
         </Button>
       </div>
       <Form onFinish={onFinish} layout="vertical" className="everflow-form">
+        <Row gutter={16}>
+          <Col span={8}>
+            <Form.Item
+              name="offerId"
+              label="Offer ID"
+              rules={[
+                { required: true, message: "Please enter a valid Offer ID!" },
+              ]}
+            >
+              <InputNumber
+                placeholder="Enter Offer ID"
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item
+              name="affiliateId"
+              label="Affiliate ID"
+              rules={[
+                {
+                  required: true,
+                  message: "Please enter a valid Affiliate ID!",
+                },
+              ]}
+            >
+              <InputNumber
+                placeholder="Enter Affiliate ID"
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+
         <Row gutter={16}>
           <Col span={8}>
             <Form.Item
@@ -1045,6 +1132,23 @@ const App = () => {
           <Col span={8}>
             <Form.Item name="frequency" label="Frequency">
               <Input placeholder="Enter Frequency" />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item
+              name="timezoneId"
+              label="Timezone ID"
+              rules={[
+                {
+                  required: true,
+                  message: "Please enter a valid Timezone ID!",
+                },
+              ]}
+            >
+              <InputNumber
+                placeholder="Enter Timezone ID"
+                style={{ width: "100%" }}
+              />
             </Form.Item>
           </Col>
         </Row>
