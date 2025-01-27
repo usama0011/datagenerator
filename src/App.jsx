@@ -54,8 +54,8 @@ const App = () => {
       usm_columns: [],
       query: {
         filters: [
-          { resource_type: "offer", filter_id_value: offerId },
-          { resource_type: "affiliate", filter_id_value: affiliateId },
+          { resource_type: "offer", filter_id_value: String(offerId) },
+          { resource_type: "affiliate", filter_id_value: String(affiliateId) },
         ],
         exclusions: [],
         metric_filters: [],
@@ -184,8 +184,8 @@ const App = () => {
       usm_columns: [],
       query: {
         filters: [
-          { resource_type: "offer", filter_id_value: offerId },
-          { resource_type: "affiliate", filter_id_value: affiliateId },
+          { resource_type: "offer", filter_id_value: String(offerId) },
+          { resource_type: "affiliate", filter_id_value: String(affiliateId) },
         ],
         exclusions: [],
         metric_filters: [],
