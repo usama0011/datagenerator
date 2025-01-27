@@ -55,13 +55,6 @@ const App = () => {
         settings: {},
       },
     };
-    const impressionDevices = [
-      { name: "Feed", percentage: 0.55 },
-      { name: "Facebook Stories", percentage: 0.07 },
-      { name: "Facebook Stories", percentage: 0.13 },
-      { name: "Marketplace", percentage: 0.19 },
-      { name: "Search", percentage: 0.06 },
-    ];
 
     try {
       const response = await axios.post(
