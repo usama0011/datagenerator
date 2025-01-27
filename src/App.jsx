@@ -152,6 +152,7 @@ const App = () => {
       setLoading(false);
     }
   };
+  //newtable
   const fetchReportingData = async ({ from, to, staticData }) => {
     setLoading(true);
     const payload = {
