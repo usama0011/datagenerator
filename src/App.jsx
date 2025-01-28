@@ -160,6 +160,48 @@ const App = () => {
       setLoading(false);
     }
   };
+  const addEmptyRowsWithDate = (data) => {
+    const result = [];
+    const uniqueDates = [...new Set(data.map((item) => item.date))]; // Get unique dates
+
+    uniqueDates.forEach((date) => {
+      // Find a sample row for the current date
+      const sampleRow = data.find((row) => row.date === date);
+
+      for (let i = 0; i < 4; i++) {
+        result.push({
+          date, // Fill date
+          platform: "", // Empty for other fields
+          impressionDevice: "",
+          linkClicks: "",
+          costPerResult: "",
+          amountSpent: "",
+          reach: "",
+          impressions: "",
+          cpm: "",
+          cpc: "",
+          ctr: "",
+          clicksAll: "",
+          ctrAll: "",
+          cpcAll: "",
+          pageID: sampleRow?.pageID || "N/A", // Use the sample row's Page ID
+          pageName: sampleRow?.pageName || "N/A", // Use the sample row's Page Name
+          campaignName: sampleRow?.campaignName || "N/A", // Use the sample row's Campaign Name
+          adSetName: i === 0 ? "All" : sampleRow?.adSetName || "N/A", // First row as "All", rest use actual value
+          adName: i < 2 ? "All" : sampleRow?.adName || "N/A", // First 2 rows as "All", rest use actual value
+          adcreative: i < 3 ? "All" : sampleRow?.adcreative || "", // First 2 rows as "All", rest use actual value
+          platform: i < 4 ? "All" : sampleRow?.platform || "", // First 2 rows as "All", rest use actual value
+          impressionDevice: i < 4 ? "All" : sampleRow?.impressionDevice || "", // First 2 rows as "All", rest use actual value
+        });
+      }
+
+      // Add rows for the current date from the original data
+      result.push(...data.filter((row) => row.date === date));
+    });
+
+    return result;
+  };
+
   //newtable
   const fetchReportingData = async ({
     from,
@@ -240,6 +282,8 @@ const App = () => {
               clicksAll: 0,
               ctrAll: 0,
               cpcAll: 0,
+              adSetName: staticData.adSetName || "N/A", // Populate Ad Set Name
+              adName: staticData.adName || "N/A", // Populate Ad Name
               ...staticData,
             };
           }
@@ -281,6 +325,8 @@ const App = () => {
             clicksAll,
             ctrAll,
             cpcAll,
+            adSetName: staticData.adSetName || "N/A", // Populate Ad Set Name
+            adName: staticData.adName || "N/A", // Populate Ad Name
             ...staticData, // Add static data to each row
           };
           const extraRows = impressionDevices.map((device) => {
@@ -379,8 +425,9 @@ const App = () => {
           return [originalRow, ...extraRows];
         })
         .sort((a, b) => new Date(a.date) - new Date(b.date));
+      const dataWithEmptyRows = addEmptyRowsWithDate(formattedData);
 
-      setReportingData(formattedData); // For Reporting Data
+      setReportingData(dataWithEmptyRows); // For Reporting Data
 
       message.success("Data fetched successfully!");
     } catch (error) {
@@ -464,7 +511,7 @@ const App = () => {
     },
     {
       title: "Ad Set Name",
-      dataIndex: "campaignName",
+      dataIndex: "adSetName",
       onHeaderCell: () => ({
         style: {
           minWidth: 200,
@@ -474,11 +521,11 @@ const App = () => {
           // Center align text
         },
       }),
-      key: "campaignName",
+      key: "adSetName",
     },
     {
       title: "Ad Name",
-      dataIndex: "campaignName",
+      dataIndex: "adName",
       onHeaderCell: () => ({
         style: {
           minWidth: 200,
@@ -488,7 +535,21 @@ const App = () => {
           // Center align text
         },
       }),
-      key: "campaignName",
+      key: "adName",
+    },
+
+    {
+      title: "Ad Creative",
+      dataIndex: "adcreative",
+      onHeaderCell: () => ({
+        style: {
+          minWidth: 200,
+          backgroundColor: "#3f3f3f",
+          color: "white",
+          fontWeight: "bold",
+        },
+      }),
+      key: "adcreative",
     },
     {
       title: "Campaign Link",
@@ -631,7 +692,7 @@ const App = () => {
       key: "frequency",
     },
     {
-      title: "Platform",
+      title: "Impression Device",
       dataIndex: "platform",
       key: "platform",
       onHeaderCell: () => ({
@@ -657,14 +718,14 @@ const App = () => {
 
         return (
           <span style={{ color: color, fontWeight: "bold" }}>
-            {value || "N/A"}
+            {value || ""}
           </span>
         );
       },
     },
 
     {
-      title: "Impression Device",
+      title: "Placement",
       dataIndex: "impressionDevice",
       key: "impressionDevice",
       onHeaderCell: () => ({
@@ -691,7 +752,7 @@ const App = () => {
 
         return (
           <span style={{ color: color, fontWeight: "bold" }}>
-            {value || "N/A"}
+            {value || ""}
           </span>
         );
       },
@@ -878,11 +939,31 @@ const App = () => {
     (col) => col.key !== "platform" && col.key !== "impressionDevice"
   );
 
-  const reportingColumns = [...columns]; // Includes all fields
+  const reportingColumns = columns.filter(
+    (col) =>
+      col.key !== "currentSwitch" &&
+      col.key !== "campaignImageLink" &&
+      col.key !== "pageImageLink" &&
+      col.key !== "campaignLink" &&
+      col.key !== "bidStrategy" &&
+      col.key !== "delivery" &&
+      col.key !== "ends" &&
+      col.key !== "attributionSettings" &&
+      col.key !== "frequency" &&
+      col.key !== "schedule" &&
+      col.key !== "budget"
+  ); // Includes all fields
 
   const onFinish = (values) => {
-    const { rangePicker, timezoneId, offerId, affiliateId, ...restFields } =
-      values;
+    const {
+      rangePicker,
+      timezoneId,
+      offerId,
+      affiliateId,
+      adSetName,
+      adName,
+      ...restFields
+    } = values;
 
     if (!rangePicker || rangePicker.length !== 2) {
       message.error("Please select a valid date range!");
@@ -908,7 +989,7 @@ const App = () => {
       return;
     }
 
-    const staticData = { ...restFields };
+    const staticData = { ...restFields, adSetName, adName, adCreative };
 
     fetchCampaignData({
       from,
@@ -1014,6 +1095,20 @@ const App = () => {
                 placeholder="Enter Affiliate ID"
                 style={{ width: "100%" }}
               />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item
+              name="adCreative"
+              label="Ad Creative"
+              rules={[
+                {
+                  required: true,
+                  message: "Please enter a valid Ad Creative!",
+                },
+              ]}
+            >
+              <Input placeholder="Enter Ad Creative" />
             </Form.Item>
           </Col>
         </Row>
@@ -1152,6 +1247,28 @@ const App = () => {
             </Form.Item>
           </Col>
         </Row>
+        <Row gutter={16}>
+          <Col span={8}>
+            <Form.Item
+              name="adSetName"
+              label="Ad Set Name"
+              rules={[
+                { required: true, message: "Please enter the Ad Set Name!" },
+              ]}
+            >
+              <Input placeholder="Enter Ad Set Name" />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item
+              name="adName"
+              label="Ad Name"
+              rules={[{ required: true, message: "Please enter the Ad Name!" }]}
+            >
+              <Input placeholder="Enter Ad Name" />
+            </Form.Item>
+          </Col>
+        </Row>
 
         <Form.Item style={{ width: "100%" }}>
           <Button
@@ -1179,7 +1296,7 @@ const App = () => {
       <div className="eveflowtablecontainer">
         <Table
           dataSource={reportingData}
-          columns={columns}
+          columns={reportingColumns}
           pagination={false}
           rowKey={(record, index) => `${record.date}-${index}`}
           className="everflow-table"
